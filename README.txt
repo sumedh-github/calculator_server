@@ -1,7 +1,7 @@
 *Before executing the code you need to make neceessary changes in the source code.
 *Some changes depend on the operation system you are using.
 
-admin login creds : Username - admin or Admin
+default admin login creds : Username - admin or Admin
                     Password - admin123
 
 [Windows]
