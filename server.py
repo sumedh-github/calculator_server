@@ -3,14 +3,17 @@ import time
 import os
 
 op = 0
+pos = 0
+paswd_list = ['admin123']
 helpp = ' For basic arithmatics, Usage - [operand1][operator][operand2] eg 2+2 or 6/3...\n\
  Other commands,\n\
   1.exit       --Log out of current session.\n\
   2.end        --End the current session(Closes the client program.)\n\
   3.Terminate  --Shut the server down(Requires administration access).\n\
-  4.clear      --Clear the output screen'
+  4.clear      --Clear the output screen.\n\
+  5.psswd      --Change admin password.'
 
-def validate(username,cli_sock):
+def validate(username,cli_sock,paswd_list,pos):
     cli_sock.send(bytes('Enter Passwd : ','utf-8'))
     try:
         passwd = cli_sock.recv(1024)
@@ -18,7 +21,7 @@ def validate(username,cli_sock):
         flag = 'Terminate'
         print('  [OK]Force Stop!')
         return flag
-    if passwd.decode('utf-8') == 'admin123':
+    if passwd.decode('utf-8') == paswd_list[pos]:
         cli_sock.send(bytes('Authentication Sucessfull.','utf-8'))
         return 'auth'
     else:
@@ -45,7 +48,7 @@ def saviour(cli_msg,op):
 
         return op,op1,op2    
 
-def exception(cli_msg,flag,username):
+def command_list(cli_msg,flag,username,paswd_list):
     if cli_msg == 'exit':
         close = 'Adios...'
         cli_sock.send(bytes(close,'utf-8'))
@@ -62,6 +65,21 @@ def exception(cli_msg,flag,username):
         cli_sock.send(helpp.encode('utf-8'))
         flag = 'helpp'
         return flag
+    if cli_msg[:5] == 'psswd':
+        if username == 'Admin' or username == 'admin':
+            paswd_list.pop(0)
+            temp_pass = str(cli_msg[6:])
+            paswd_list.append(str(cli_msg[6:]))
+            cli_sock.send(bytes('Password changed sucessfully.','utf-8'))
+            print(f'  [.]{username} changed the password.')
+            flag = 'psswd'
+            return flag
+        else:
+            close = 'Unauthorised command.'
+            cli_sock.send(bytes(close,'utf-8'))
+            flag = 'unauth_user'
+            return flag
+            
         
     if cli_msg == 'Terminate':
         if username == 'Admin' or username == 'admin':
@@ -136,7 +154,7 @@ while True:
 
     if username == 'Admin' or username == 'admin':
         print(f"  [.]{username} login authenticating.")
-        flag = validate(username,cli_sock)
+        flag = validate(username,cli_sock,paswd_list,pos)
 
     if flag == 'unauth':
         continue
@@ -159,7 +177,7 @@ while True:
 
         cli_msg = cli_msg.decode('utf-8')
 
-        flag = exception(cli_msg,flag,username)
+        flag = command_list(cli_msg,flag,username,paswd_list)
 
         if flag == 'helpp':
             continue
@@ -170,6 +188,8 @@ while True:
         if flag == 'unauth_user':
             continue
         if flag == 'not_terminate':
+            continue
+        if flag == 'psswd':
             continue
         if flag == 'Terminate':
             break
