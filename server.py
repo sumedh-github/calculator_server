@@ -4,16 +4,17 @@ import os
 
 op = 0
 pos = 0
-paswd_list = ['admin123']
+paswd_dict = {'Admin':'admin123'}
 helpp = ' For basic arithmatics, Usage - [operand1][operator][operand2] eg 2+2 or 6/3...\n\
  Other commands,\n\
   1.exit       --Log out of current session.\n\
   2.end        --End the current session(Closes the client program.)\n\
   3.Terminate  --Shut the server down(Requires administration access).\n\
   4.clear      --Clear the output screen.\n\
-  5.psswd      --Change admin password.'
+  5.psswd      --Change admin password. [usage]:psswd <password>\n\
+  6.show users --List all the users(Requires administration access).'
 
-def validate(username,cli_sock,paswd_list,pos):
+def validate(username,cli_sock,paswd_dict,pos):
     cli_sock.send(bytes('Enter Passwd : ','utf-8'))
     try:
         passwd = cli_sock.recv(1024)
@@ -21,13 +22,17 @@ def validate(username,cli_sock,paswd_list,pos):
         flag = 'Terminate'
         print('  [OK]Force Stop!')
         return flag
-    if passwd.decode('utf-8') == paswd_list[pos]:
+    if passwd.decode('utf-8') == paswd_dict[username]:
         cli_sock.send(bytes('Authentication Sucessfull.','utf-8'))
         return 'auth'
     else:
         cli_sock.send(bytes('Authentication Unsucessfull.','utf-8'))
         print("  [.]Admin Authentication unsuccessfull.")
         return 'unauth'
+    
+
+def password_control():
+    password_dict = {}
 
 def saviour(cli_msg,op):
     for x in cli_msg:
@@ -55,30 +60,29 @@ def command_list(cli_msg,flag,username,paswd_list):
         print("  [.]Closed")
         flag ='exit'
         return flag
+
     if cli_msg == 'end':
         close = 'Session Terminated.'
         cli_sock.send(bytes(close,'utf-8'))
         print("  [.]Closed")
         flag='end'
         return flag
+
     if cli_msg == 'help' or cli_msg == '?':
         cli_sock.send(helpp.encode('utf-8'))
         flag = 'helpp'
         return flag
+
     if cli_msg[:5] == 'psswd':
-        if username == 'Admin' or username == 'admin':
-            paswd_list.pop(0)
-            temp_pass = str(cli_msg[6:])
-            paswd_list.append(str(cli_msg[6:]))
-            cli_sock.send(bytes('Password changed sucessfully.','utf-8'))
-            print(f'  [.]{username} changed the password.')
+        if username == 'Guest':
+            cli_sock.send(bytes(f'Cant set a password on {username} account.','utf-8'))
             flag = 'psswd'
             return flag
-        else:
-            close = 'Unauthorised command.'
-            cli_sock.send(bytes(close,'utf-8'))
-            flag = 'unauth_user'
-            return flag
+        paswd_dict[username] = str(cli_msg[6:])
+        cli_sock.send(bytes('Password changed sucessfully.','utf-8'))
+        print(f'  [.]{username} changed the password.')
+        flag = 'psswd'
+        return flag
             
         
     if cli_msg == 'Terminate':
@@ -109,7 +113,7 @@ def command_list(cli_msg,flag,username,paswd_list):
 os.system("clear") 
 
 ip = '192.168.0.11'
-port = 5000
+port = 5001
 error =  'Ambigious command.'
 
 print("-" * 50)
@@ -140,7 +144,7 @@ while True:
     except KeyboardInterrupt as k:
         print('\n[OK]Force Stop!')
         break
-
+#s='sumedh'.title() + ''
     try:
         username = cli_sock.recv(1024) 
     except KeyboardInterrupt as k:
@@ -151,10 +155,15 @@ while True:
         continue
 
     username = username.decode('utf-8')
+    print(username)
+    print(type(username))
+    if username == 'admin':
+        username = 'Admin'
 
-    if username == 'Admin' or username == 'admin':
-        print(f"  [.]{username} login authenticating.")
-        flag = validate(username,cli_sock,paswd_list,pos)
+    for user,_ in paswd_dict.items():
+        if user == username:
+            print(f"  [.]{username} login authenticating.")
+            flag = validate(username,cli_sock,paswd_dict,pos)
 
     if flag == 'unauth':
         continue
@@ -174,10 +183,13 @@ while True:
             print('\n  [OK]Force Stop!')
             flag = 'Terminate'
             break
+        except ConnectionResetError as c:
+            print('  [-]Connection reset by user.')
+            break
 
         cli_msg = cli_msg.decode('utf-8')
 
-        flag = command_list(cli_msg,flag,username,paswd_list)
+        flag = command_list(cli_msg,flag,username,paswd_dict)
 
         if flag == 'helpp':
             continue
