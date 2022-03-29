@@ -75,7 +75,7 @@ def command_list(cli_msg,flag,username,paswd_list):
 
     if cli_msg[:5] == 'psswd':
         if username == 'Guest':
-            cli_sock.send(bytes(f'Cant set a password on {username} account.','utf-8'))
+            cli_sock.send(bytes('Cant set a password on Guest account.','utf-8'))
             flag = 'psswd'
             return flag
         paswd_dict[username] = str(cli_msg[6:])
@@ -144,7 +144,7 @@ while True:
     except KeyboardInterrupt as k:
         print('\n[OK]Force Stop!')
         break
-#s='sumedh'.title() + ''
+    
     try:
         username = cli_sock.recv(1024) 
     except KeyboardInterrupt as k:
@@ -155,8 +155,6 @@ while True:
         continue
 
     username = username.decode('utf-8')
-    print(username)
-    print(type(username))
     if username == 'admin':
         username = 'Admin'
 
