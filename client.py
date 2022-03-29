@@ -17,7 +17,6 @@ def design(ip,port):
        After logging in enter cmd "help" or "?" For more info...')
 
 os.system("clear")
-
 ip = '192.168.0.11'
 port = 5001
 print("-" * 50)
@@ -63,8 +62,6 @@ while True:
     s.send(username)
     
     for user in protected_users:
-        if user == 'Guest':
-            break
         if user == username.decode('utf-8'):
             passpr = s.recv(1024).decode('utf-8')
             print(passpr)
@@ -158,7 +155,7 @@ while True:
             break
         if res.decode('utf-8') == 'Password changed sucessfully.':
             continue
-        if res.decode('utf-8') == 'Cant set a password on {username} account.':
+        if res.decode('utf-8') == 'Cant set a password on Guest account.':
             protected_users.remove('Guest')
             continue
         if res.decode('utf-8') == 'Are you sure you want to shutdown the server?(y/n) : ':
@@ -185,3 +182,4 @@ while True:
             continue
     if flag:
         break
+
