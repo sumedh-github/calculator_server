@@ -7,7 +7,7 @@ pos = 0
 paswd_dict = {'Admin':'admin123'}
 helpp = ' For basic arithmatics, Usage - [operand1][operator][operand2] eg 2+2 or 6/3...\n\
  Other commands,\n\
-  1.exit       --Log out of current session.\n\
+  1.logout       --Log out of current session.\n\
   2.end        --End the current session(Closes the client program.)\n\
   3.Terminate  --Shut the server down(Requires administration access).\n\
   4.clear      --Clear the output screen.\n\
@@ -54,11 +54,11 @@ def saviour(cli_msg,op):
         return op,op1,op2    
 
 def command_list(cli_msg,flag,username,paswd_list):
-    if cli_msg == 'exit':
+    if cli_msg == 'logout':
         close = 'Adios...'
         cli_sock.send(bytes(close,'utf-8'))
         print("  [.]Closed")
-        flag ='exit'
+        flag ='logout'
         return flag
 
     if cli_msg == 'end':
@@ -78,6 +78,19 @@ def command_list(cli_msg,flag,username,paswd_list):
             cli_sock.send(bytes('Cant set a password on Guest account.','utf-8'))
             flag = 'psswd'
             return flag
+        if username == 'Admin':
+            cli_sock.send(bytes('Enter current password :','utf-8'))
+            cur_psswd = cli_sock.recv(1024).decode('utf-8')
+            if cur_psswd == paswd_dict['Admin']:
+                paswd_dict[username] = str(cli_msg[6:])
+                cli_sock.send(bytes('Password changed sucessfully.','utf-8'))
+                print(f'  [.]{username} changed the password.')
+                flag = 'psswd'
+                return flag
+            else:
+                cli_sock.send(bytes('Wrong password','utf-8'))
+                flag = 'psswd'
+                return flag
         paswd_dict[username] = str(cli_msg[6:])
         cli_sock.send(bytes('Password changed sucessfully.','utf-8'))
         print(f'  [.]{username} changed the password.')
@@ -191,7 +204,7 @@ while True:
 
         if flag == 'helpp':
             continue
-        if flag == 'exit':
+        if flag == 'logout':
             break
         if flag == 'end':
             break
@@ -234,5 +247,6 @@ while True:
         cli_sock.send((bytes(res,'utf-8')))
     if flag == 'Terminate':
         break
+print('\nClosing the window in 5 sec...')
+time.sleep(5)
 s.close()
-
