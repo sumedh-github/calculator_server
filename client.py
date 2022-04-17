@@ -6,6 +6,40 @@ import subprocess
 protected_users = ['Admin']
 user_list = {'Admin'}
 
+def console():
+    time.sleep(2)
+    temp_flag = ''
+    while True:
+        inp = input('console > ')
+        if inp == '':
+            continue
+        if inp == 'help' or inp == '?':
+            print('1.login admin')
+            continue
+        if inp == 'login admin':
+            print('Enter password:')
+            psswd = input('-->')
+            if psswd == 'admin123':
+                while True:
+                    inp1 = input('admin > ')
+                    if inp1 == 'help' or inp1 == '?':
+                        print('1.boot')
+                        continue
+                    if inp1 == 'boot':
+                        return 'boot'
+                    if inp1 == 'logout':
+                        temp_flag = 'continue'
+                        break
+                    else:
+                        print('ambiguous command')
+                    if temp_flag == 'continue':
+                        continue
+            else:
+                print('Wrong password!')
+        else:
+            print('ambiguous command')
+            continue
+
 def design(ip,port):
     print("-" * 50)
     print("Creating a client socket...")
@@ -31,21 +65,28 @@ flag = False
 
 print('* Note-Username login is not mandatory. Its just for log purpose\n\
        Press ENTER for Guest login or just enter your name.\n\
-       After logging in enter cmd "help" or "?" For more info...')
-time.sleep(2)
+       If got stuck, enter cmd "help" or "?" For more info...')
+
 
 
 while True:
+    time.sleep(2)
     flag2 = ''
 
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 
     try:
+        time.sleep(1)
         s.connect((ip,port))
     except ConnectionRefusedError as c:
         print('[-]Server Not Found.')
-        break
+        con = console()
+        if con == 'boot':
+            print('\n[*]Booting the server..')
+            time.sleep(2)
+            os.system("gnome-terminal -e 'python3 server.py' --window > /dev/null 2>&1")
+            continue
 
     try:
         username = input("Username : ")
@@ -153,6 +194,12 @@ while True:
             s.close()
             exit()
             break
+        if res.decode('utf-8') == 'Enter current password :':
+            cur_psswd = input('-->')
+            s.send(cur_psswd.encode('utf-8'))
+            temp = s.recv(1024)
+            print(temp.decode('utf-8'))
+            continue
         if res.decode('utf-8') == 'Password changed sucessfully.':
             continue
         if res.decode('utf-8') == 'Cant set a password on Guest account.':
@@ -182,4 +229,3 @@ while True:
             continue
     if flag:
         break
-
